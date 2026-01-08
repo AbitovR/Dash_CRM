@@ -38,6 +38,7 @@ export async function POST(
       );
     }
     const signUrl = `${appUrl}/sign/${id}?token=${signingToken}`;
+    const pdfUrl = `${appUrl}/api/contracts/${id}/pdf?token=${signingToken}`;
 
     // Generate PDF for email attachment
     let pdfBuffer: Buffer | null = null;
@@ -68,8 +69,6 @@ export async function POST(
     }
 
     // Generate email HTML
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const pdfUrl = `${appUrl}/api/contracts/${id}/pdf?token=${signingToken}`;
     
     const emailHtml = generateContractEmailHTML(
       `${contract.customer.firstName} ${contract.customer.lastName}`,

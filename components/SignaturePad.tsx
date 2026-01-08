@@ -27,7 +27,7 @@ export default function SignaturePad({ onSave, onCancel, customerName }: Signatu
   useEffect(() => {
     if (mounted && signatureRef.current) {
       const isDark = document.documentElement.classList.contains("dark");
-      signatureRef.current.penColor = isDark ? "#ffffff" : "#000000";
+      (signatureRef.current as any).penColor = isDark ? "#ffffff" : "#000000";
     }
   }, [theme, mounted]);
 
