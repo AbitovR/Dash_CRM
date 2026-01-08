@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  role          String    @default("user") // user, admin
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Customer {
+  id                String    @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String
+  phone             String
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  country           String?
+  
+  // Car shipping specific fields
+  vehicleMake       String?
+  vehicleModel      String?
+  vehicleYear       Int?
+  vehicleVIN        String?
+  vehicleType       String? // sedan, SUV, truck, etc.
+  pickupLocation    String?
+  deliveryLocation  String?
+  preferredDate     DateTime?
+  specialNotes      String?
+  
+  // Relations
+  contracts         Contract[]
+  shipments         Shipment[]
+  payments          Payment[]
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([email])
+  @@index([phone])
+}
+
+model Contract {
+  id                String    @id @default(cuid())
+  customerId        String
+  customer          Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  contractNumber    String    @unique
+  title             String
+  description       String?
+  
+  // Contract terms
+  totalAmount       Float
+  depositAmount     Float?
+  currency          String    @default("USD")
+  
+  // Payment method and breakdown
+  paymentMethod     String    @default("credit_card") // credit_card, cod (cash on delivery), split
+  amountPaidOnline  Float?   // Amount to be paid via credit card
+  amountPaidCOD     Float?   // Amount to be paid cash on delivery
+  transportAmount   Float?   // Transport fee amount
+  brokerFeeAmount   Float?   // Broker fee amount
+  
+  // Status tracking
+  status            String    @default("draft") // draft, sent, signed, completed, cancelled
+  signedAt          DateTime?
+  signedBy          String? // Customer name who signed
+  
+  // E-signature
+  signatureUrl      String?
+  contractPdfUrl    String?
+
+  // Security - token for customer access
+  signingToken      String?   @unique
+
+  // Stripe integration
+  stripePaymentLinkId String?
+  stripePaymentLinkUrl String?
+  
+  // Shipment details
+  pickupDate        DateTime?
+  deliveryDate      DateTime?
+  estimatedDelivery DateTime?
+  
+  // Relations
+  shipment          Shipment?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([customerId])
+  @@index([status])
+  @@index([contractNumber])
+}
+
+model Shipment {
+  id                String    @id @default(cuid())
+  customerId        String
+  customer          Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  contractId        String?   @unique
+  contract          Contract? @relation(fields: [contractId], references: [id])
+  
+  trackingNumber    String?   @unique
+  status            String    @default("pending") // pending, in_transit, delivered, cancelled
+  
+  pickupLocation    String
+  deliveryLocation  String
+  pickupDate        DateTime?
+  deliveryDate      DateTime?
+  estimatedDelivery DateTime?
+  
+  carrier           String?
+  driverName        String?
+  driverPhone       String?
+  
+  notes             String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([customerId])
+  @@index([trackingNumber])
+  @@index([status])
+}
+
+model Payment {
+  id                String    @id @default(cuid())
+  customerId        String
+  customer          Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  contractId        String?
+  
+  amount            Float
+  currency          String    @default("USD")
+  status            String    // pending, completed, failed, refunded
+  paymentMethod     String?   // stripe, cash, check, etc.
+  
+  // Stripe fields
+  stripePaymentId   String?   @unique
+  stripeCustomerId  String?
+  stripeChargeId    String?
+  
+  description       String?
+  receiptUrl        String?
+  
+  paidAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([customerId])
+  @@index([contractId])
+  @@index([status])
+  @@index([stripePaymentId])
+}
+
