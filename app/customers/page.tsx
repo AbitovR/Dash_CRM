@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 export const dynamic = 'force-dynamic';
 
 export default async function CustomersPage() {
-  const customers = await prisma.customer.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+  try {
+    const customers = await prisma.customer.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -122,4 +123,27 @@ export default async function CustomersPage() {
       </div>
     </div>
   );
+  } catch (error: any) {
+    console.error("Error loading customers:", error);
+    return (
+      <div className="min-h-screen bg-background pt-20">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-8">Customers</h1>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
+              Database Connection Error
+            </h2>
+            <p className="text-red-700 dark:text-red-300 mb-4">
+              {error.message?.includes("Can't reach database") 
+                ? "Unable to connect to the database. Please check your DATABASE_URL environment variable in Vercel."
+                : "An error occurred while loading customers. Please check your database configuration."}
+            </p>
+            <p className="text-sm text-red-600 dark:text-red-400">
+              Error: {error.message || "Unknown error"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
