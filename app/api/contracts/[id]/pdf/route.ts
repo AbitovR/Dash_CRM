@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateContractPDF } from "@/lib/pdfGenerator";
 import { verifySigningToken } from "@/lib/security";
+import { getSession } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -11,6 +12,18 @@ export async function GET(
     const { id } = await params;
     const searchParams = request.nextUrl.searchParams;
     const token = searchParams.get("token");
+
+    // Check authentication - either token (public) or session (admin)
+    const session = await getSession();
+    const hasToken = !!token;
+    const hasSession = !!session;
+
+    if (!hasToken && !hasSession) {
+      return NextResponse.json(
+        { error: "Unauthorized. Please provide a valid token or sign in." },
+        { status: 401 }
+      );
+    }
 
     const contract = await prisma.contract.findUnique({
       where: { id },
@@ -28,6 +41,12 @@ export async function GET(
 
     // Verify token if provided (for public access)
     if (token) {
+      if (!contract.signingToken) {
+        return NextResponse.json(
+          { error: "Contract does not have a signing token" },
+          { status: 401 }
+        );
+      }
       const isAuthorized = verifySigningToken(contract.signingToken, token);
       if (!isAuthorized) {
         return NextResponse.json(
@@ -38,6 +57,7 @@ export async function GET(
     }
 
     // Generate PDF
+    console.log("Generating PDF for contract:", contract.contractNumber);
     const pdfBuffer = await generateContractPDF({
       contractNumber: contract.contractNumber,
       title: contract.title,
@@ -59,6 +79,8 @@ export async function GET(
       estimatedDelivery: contract.estimatedDelivery,
     });
 
+    console.log("PDF generated successfully, size:", pdfBuffer.length, "bytes");
+
     // Return PDF as response
     return new NextResponse(pdfBuffer as any, {
       headers: {
@@ -69,8 +91,12 @@ export async function GET(
     });
   } catch (error: any) {
     console.error("Error generating PDF:", error);
+    console.error("Error stack:", error.stack);
     return NextResponse.json(
-      { error: error.message || "Failed to generate PDF" },
+      { 
+        error: error.message || "Failed to generate PDF",
+        details: process.env.NODE_ENV === "development" ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

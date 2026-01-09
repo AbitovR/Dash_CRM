@@ -28,16 +28,32 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
       const doc = new PDFDocument({
         size: "LETTER",
         margins: { top: 50, bottom: 50, left: 50, right: 50 },
+        autoFirstPage: true,
       });
 
       const buffers: Buffer[] = [];
 
-      doc.on("data", buffers.push.bind(buffers));
-      doc.on("end", () => {
-        const pdfBuffer = Buffer.concat(buffers);
-        resolve(pdfBuffer);
+      doc.on("data", (chunk: Buffer) => {
+        buffers.push(chunk);
       });
-      doc.on("error", reject);
+      
+      doc.on("end", () => {
+        try {
+          const pdfBuffer = Buffer.concat(buffers);
+          if (pdfBuffer.length === 0) {
+            reject(new Error("Generated PDF is empty"));
+            return;
+          }
+          resolve(pdfBuffer);
+        } catch (err) {
+          reject(err);
+        }
+      });
+      
+      doc.on("error", (err: Error) => {
+        console.error("PDFDocument error:", err);
+        reject(err);
+      });
 
       // Header
       doc
