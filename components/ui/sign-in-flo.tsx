@@ -204,9 +204,10 @@ interface SignInFloProps {
   onSignIn?: (email: string, password: string) => Promise<void>;
   onSignUp?: (email: string, password: string, name: string) => Promise<void>;
   error?: string;
+  allowSignUp?: boolean; // Control whether sign-up is allowed
 }
 
-export const SignInFlo: React.FC<SignInFloProps> = ({ onSignIn, onSignUp, error }) => {
+export const SignInFlo: React.FC<SignInFloProps> = ({ onSignIn, onSignUp, error, allowSignUp = false }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -351,18 +352,20 @@ export const SignInFlo: React.FC<SignInFloProps> = ({ onSignIn, onSignUp, error 
             </div>
           </div>
 
-          <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-              <button
-                type="button"
-                onClick={toggleMode}
-                className="text-primary hover:underline font-medium"
-              >
-                {isSignUp ? 'Sign in' : 'Sign up'}
-              </button>
-            </p>
-          </div>
+          {allowSignUp && (
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                <button
+                  type="button"
+                  onClick={toggleMode}
+                  className="text-primary hover:underline font-medium"
+                >
+                  {isSignUp ? 'Sign in' : 'Sign up'}
+                </button>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -13,6 +13,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if any users already exist - only allow one user
+    const userCount = await prisma.user.count();
+    
+    if (userCount > 0) {
+      return NextResponse.json(
+        { error: "Only one user account is allowed. Please contact the administrator." },
+        { status: 403 }
+      );
+    }
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
@@ -28,9 +38,8 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user (default role is "user", first user becomes admin)
-    const userCount = await prisma.user.count();
-    const role = userCount === 0 ? "admin" : "user";
+    // First (and only) user is admin
+    const role = "admin";
 
     const user = await prisma.user.create({
       data: {

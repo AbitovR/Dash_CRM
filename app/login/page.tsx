@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SignInFlo } from "@/components/ui/sign-in-flo";
 
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string>("");
+  const [allowSignUp, setAllowSignUp] = useState(false);
+
+  // Check if any users exist - only allow signup if no users exist
+  useEffect(() => {
+    fetch("/api/auth/check-users")
+      .then((res) => res.json())
+      .then((data) => {
+        setAllowSignUp(data.userCount === 0);
+      })
+      .catch(() => {
+        // If check fails, don't allow signup
+        setAllowSignUp(false);
+      });
+  }, []);
 
   const handleSignIn = async (email: string, password: string) => {
     try {
@@ -49,6 +63,9 @@ export default function LoginPage() {
         return;
       }
 
+      // Disable signup after first user is created
+      setAllowSignUp(false);
+      
       // Auto sign in after signup
       await handleSignIn(email, password);
     } catch (err) {
@@ -57,6 +74,6 @@ export default function LoginPage() {
     }
   };
 
-  return <SignInFlo onSignIn={handleSignIn} onSignUp={handleSignUp} error={error} />;
+  return <SignInFlo onSignIn={handleSignIn} onSignUp={handleSignUp} error={error} allowSignUp={allowSignUp} />;
 }
 
