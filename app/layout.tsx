@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import Sidebar from "@/components/Sidebar";
+import { AuthProvider } from "@/components/AuthProvider";
+import ConditionalSidebar from "@/components/ConditionalSidebar";
 
 export const metadata: Metadata = {
   title: "Caravan Transport CRM",
@@ -17,8 +18,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider defaultTheme="system" storageKey="caravan-crm-theme">
-          <Sidebar />
-          {children}
+          <AuthProvider>
+            <ConditionalSidebar />
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Users, FileText, DollarSign, BarChart3, Home, Menu, Moon, Sun, X } from "lucide-react";
+import { Users, FileText, DollarSign, BarChart3, Home, Menu, Moon, Sun, X, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -15,10 +15,28 @@ export default function Sidebar() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [user, setUser] = useState<{ name: string | null; email: string; role: string } | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    // Fetch user data
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {
+        // Not authenticated
+      });
   }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/session", { method: "DELETE" });
+    router.push("/login");
+    router.refresh();
+  };
 
   // Get current theme from DOM
   const currentTheme = mounted 
@@ -98,7 +116,22 @@ export default function Sidebar() {
             })}
           </nav>
 
-          <div className="mt-auto pt-8 border-t">
+          <div className="mt-auto pt-8 border-t space-y-4">
+            {user && (
+              <div className="px-4 py-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <User size={16} className="text-muted-foreground" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {user.name || user.email}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {user.role}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between px-4 py-2">
               <span className="text-sm text-muted-foreground">Theme</span>
               <Button
@@ -114,6 +147,15 @@ export default function Sidebar() {
                 )}
               </Button>
             </div>
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-left hover:bg-destructive/10 hover:text-destructive text-muted-foreground"
+              >
+                <LogOut size={20} />
+                <span>Logout</span>
+              </button>
+            )}
           </div>
         </div>
       </SheetContent>
