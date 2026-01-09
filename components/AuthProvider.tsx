@@ -32,6 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       const response = await fetch("/api/auth/me");
+      
+      if (!response.ok) {
+        setUser(null);
+        if (pathname !== "/login" && !pathname?.startsWith("/sign")) {
+          // Don't redirect if already on login page
+          if (pathname !== "/login") {
+            router.push("/login");
+          }
+        }
+        setLoading(false);
+        return;
+      }
+      
       const data = await response.json();
       
       if (data.authenticated) {
@@ -43,7 +56,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     } catch (error) {
+      console.error("Auth check error:", error);
       setUser(null);
+      // Only redirect if not already on login or sign page
+      if (pathname !== "/login" && !pathname?.startsWith("/sign")) {
+        router.push("/login");
+      }
     } finally {
       setLoading(false);
     }
