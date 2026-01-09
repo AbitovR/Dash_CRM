@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, Send, ExternalLink, PenTool, Mail, Download } from "lucide-react";
+import { ArrowLeft, Send, ExternalLink, PenTool, Mail } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import ResendEmailButton from "@/components/ResendEmailButton";
+import DownloadPDFButton from "@/components/DownloadPDFButton";
 
 export default async function ContractDetailPage({
   params,
@@ -269,15 +270,10 @@ export default async function ContractDetailPage({
             {/* Download PDF Section */}
             <div className="border-b border-border pb-6">
               <h2 className="text-lg font-semibold mb-3">Contract Document</h2>
-              <a
-                href={`/api/contracts/${contract.id}/pdf`}
-                download={`contract-${contract.contractNumber}.pdf`}
-              >
-                <Button variant="outline" className="inline-flex items-center gap-2">
-                  <Download size={20} />
-                  Download PDF
-                </Button>
-              </a>
+              <DownloadPDFButton 
+                contractId={contract.id}
+                contractNumber={contract.contractNumber}
+              />
             </div>
 
             {/* Actions */}

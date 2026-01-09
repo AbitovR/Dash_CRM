@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
-import { CheckCircle, AlertCircle, Download } from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import SignaturePad from "@/components/SignaturePad";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import DownloadPDFButton from "@/components/DownloadPDFButton";
 
 export default function PublicSignContractPage() {
   const router = useRouter();
@@ -233,16 +234,11 @@ export default function PublicSignContractPage() {
 
         <Card className="p-6">
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <a
-              href={`/api/contracts/${contractId}/pdf?token=${token}`}
-              download={`contract-${contract.contractNumber}.pdf`}
-              className="w-full sm:w-auto"
-            >
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Download size={16} className="mr-2" />
-                Download PDF
-              </Button>
-            </a>
+            <DownloadPDFButton 
+              contractId={contractId}
+              contractNumber={contract.contractNumber}
+              token={token}
+            />
             {contract.paymentMethod === "cod" ? (
               <div className="w-full sm:w-auto p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                 <p className="text-sm font-medium text-yellow-800 dark:text-yellow-400">

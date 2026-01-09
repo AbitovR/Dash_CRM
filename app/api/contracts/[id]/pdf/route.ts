@@ -60,10 +60,11 @@ export async function GET(
     });
 
     // Return PDF as response
-    return new NextResponse(pdfBuffer as any, {
+    return new NextResponse(pdfBuffer, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="contract-${contract.contractNumber}.pdf"`,
+        "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });
   } catch (error: any) {
