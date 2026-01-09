@@ -63,7 +63,14 @@ export async function POST(
 
     // Send confirmation email to customer
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const contractUrl = `${appUrl}/contracts/${id}`;
+    // Use the public signing route with token for security - customers should NOT access admin dashboard
+    const signingToken = contract.signingToken;
+    if (!signingToken) {
+      console.error("Contract missing signing token, cannot generate secure view URL");
+    }
+    const contractUrl = signingToken 
+      ? `${appUrl}/sign/${id}?token=${signingToken}`
+      : `${appUrl}/sign/${id}`; // Fallback if token missing (shouldn't happen)
     
     const emailHtml = `
       <!DOCTYPE html>
@@ -85,6 +92,9 @@ export async function POST(
               View Contract
             </a>
           </div>
+          <p style="font-size: 12px; color: #666; margin-top: 20px;">
+            Note: This link provides secure, read-only access to your contract. You will not have access to the admin dashboard.
+          </p>
           <p>Best regards,<br><strong>Caravan Transport LLC</strong></p>
         </div>
       </body>
